@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-HK", translate="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会议室查询助手 - 粤语/英语双语版</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="bot-avatar">
+        <!-- <i class="fas fa-calendar-check"></i> -->
+         <img id="logo"src="di_full_logo.png" alt="">
+      </div>
+      <div class="header-text">
+        <div class="chat-title" id="chatTitle">會議室査詢助手</div>
+        <div class="chat-subtitle" id="chatSubtitle">粵語/英語雙語支持</div>
+      </div>
+      <div class="language-indicator" id="langIndicator">
+        <i class="fas fa-language"></i>
+        <span id="currentLang">未檢測</span>
+      </div>
+    </div>
+
+    <div class="chat-history" id="chatHistory">
+      <div class="message bot">
+        <div class="avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">您好！ 我是會議室助手，支持粵語和英語査詢</div>
+            <div class="message-text">請告訴我您想査詢的會議室和時間段。</div>
+          <div class="message-text" style="margin-top: 10px; font-size:15px" >Hello! I'm the booking assistant, supporting Cantonese and English queries. </div>
+            <div class="message-text" style="font-size:15px">Please tell me the meeting room and time period you want to check.</div>
+          <div class="message-time" id="currentTime"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-container">
+      <div class="input-area">
+        <textarea class="chat-input" id="chatInput" placeholder="输入您的消息（粤语/英语）..."></textarea>
+        <button class="send-btn" id="sendBtn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatHistory = document.getElementById('chatHistory');
+    const currentTime = document.getElementById('currentTime');
+    const langIndicator = document.getElementById('currentLang');
+    const chatTitle = document.getElementById('chatTitle');
+    const chatSubtitle = document.getElementById('chatSubtitle');
+    let currentLanguage = null;
+
+    function updateCurrentTime() {
+      const now = new Date();
+      currentTime.textContent = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+    }
+    updateCurrentTime();
+    setInterval(updateCurrentTime, 60000);
+
+    function detectLanguage(text) {
+      const chineseRegex = /[\u4e00-\u9fa5]|嘅|咗|咩|哋|啲|喺|嚟|噉|嘅|咁|唔/;
+      if (chineseRegex.test(text)) {
+        currentLanguage = 'cantonese';
+        langIndicator.textContent = '粤语';
+        chatTitle.textContent = '会议室查询助手';
+        chatSubtitle.textContent = '粤语/英语双语支持';
+        langIndicator.parentElement.style.background = 'rgba(30, 136, 229, 0.3)';
+        return 'cantonese';
+      } else {
+        currentLanguage = 'english';
+        langIndicator.textContent = 'English';
+        chatTitle.textContent = 'Booking Room Assistant';
+        chatSubtitle.textContent = 'Supports Cantonese/English';
+        langIndicator.parentElement.style.background = 'rgba(216, 27, 96, 0.3)';
+        return 'english';
+      }
+    }
+
+    function showTypingIndicator() {
+      const typingIndicator = document.createElement('div');
+      typingIndicator.className = 'message bot';
+      typingIndicator.innerHTML = `
+        <div class="avatar">
+          <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+          <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>`;
+      chatHistory.appendChild(typingIndicator);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+      return typingIndicator;
+    }
+
+    function addMessage(text, sender) {
+      const now = new Date();
+      const timeString = now.getHours() + ':' + now.getMinutes().toString().padStart(2, '0');
+      const messageEl = document.createElement('div');
+      messageEl.className = `message ${sender}`;
+      messageEl.innerHTML = `
+        <div class="avatar">
+          <i class="fas fa-${sender === 'bot' ? 'robot' : 'user'}"></i>
+        </div>
+        <div class="message-content">
+          <div class="message-text">${text}</div>
+          <div class="message-time">${timeString}</div>
+        </div>`;
+      chatHistory.appendChild(messageEl);
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const message = chatInput.value.trim();
+      if (message) {
+        const detectedLanguage = detectLanguage(message);
+        sendBtn.disabled = true;
+        addMessage(message, 'user');
+        chatInput.value = '';
+        const typingIndicator = showTypingIndicator();
+        try {
+          const response = await fetch("http://localhost:4000/ask", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ query: message })
+          });
+
+          const responseText = await response.text();
+          typingIndicator.remove();
+
+          if (!response.ok) {
+            addMessage(`❌ 錯誤: ${responseText}`, 'bot');
+            return;
+          }
+
+          let parsed;
+          try {
+            parsed = JSON.parse(responseText);
+          } catch {
+            addMessage(responseText, 'bot');
+            return;
+          }
+
+          if (Array.isArray(parsed)) {
+            parsed.forEach(entry => displayRoomResponse(entry));
+          } else {
+            displayRoomResponse(parsed);
+          }
+
+          function displayRoomResponse(entry) {
+            if (typeof entry === 'string') {
+              addMessage(entry, 'bot');
+              return;
+            }
+            const room = entry.room || entry["房間"];
+            const start = entry.start || entry["開始時間"];
+            const end = entry.end || entry["結束時間"];
+            const available = entry.available ?? entry["是否可用"];
+            const conflicts = entry.conflicts || entry["衝突"] || [];
+            const suggestion = entry.suggestion || entry["建議"];
+          
+            let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${available === true || available === "✅ 可用" ? "✅ Yes" : "❌ No"}`;
+          
+            if (conflicts.length > 0) {
+              msg += `\n📌 Conflicts:\n` + conflicts.map(c => {
+                const title = c.title || c["活動"];
+                const cStart = c.start || c["開始"];
+                const cEnd = c.end || c["結束"];
+                const r = c.room || c["房間"];
+                return `• ${title} @ ${r} (${cStart} - ${cEnd})`;
+              }).join("\n");
+            }
+          
+            if (!available && suggestion?.suggested_room) {
+              const suggestionText = currentLanguage === 'cantonese'
+                ? `\n🔁 建議：可考慮使用 **${suggestion.suggested_room}**，該房間在此時段可用。`
+                : `\n🔁 Suggestion: You can try **${suggestion.suggested_room}** – it's available during this time.`;
+                msg += suggestionText;
+              }
+
+            addMessage(msg, 'bot');
+
+             }} catch (error) {
+          typingIndicator.remove();
+          addMessage(`抱歉，處理您的請求時出錯: ${error.message}`, 'bot');
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    chatInput.addEventListener('input', () => {
+      if (chatInput.value.trim().length > 0) {
+        detectLanguage(chatInput.value);
+      } else {
+        currentLanguage = null;
+        langIndicator.textContent = '未檢測';
+        chatTitle.textContent = '会议室查询助手';
+        chatSubtitle.textContent = '粤语/英语双语支持';
+        langIndicator.parentElement.style.background = 'rgba(255,255,255,0.2)';
+      }
+    });
+
+    chatInput.focus();
+  </script>
+</body>
+</html>
