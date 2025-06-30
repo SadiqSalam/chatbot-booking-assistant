@@ -1,0 +1,7 @@
+.env
+*.pyc
+__pycache__/
+*.log
+*.sqlite3
+venv/
+glass-house-*.json
