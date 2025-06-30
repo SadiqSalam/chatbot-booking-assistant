@@ -14,7 +14,12 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import sys
 import io
+from flask import render_template
 
+@app.route("/")
+def home():
+    return render_template("calendarbi.html")
+    
 session = requests.Session()
 
 import time
