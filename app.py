@@ -802,7 +802,7 @@ def ask():
         for item in parsed_list:
             try:
                 req_start = datetime.fromisoformat(item["start"])
-                if req_start < start_of_today:
+                if req_start.date() < start_of_today.date():
                     return jsonify(["Error: Start time must be today or later."])
                 end_dt = datetime.fromisoformat(item["end"])
                 if max_end_dt is None or end_dt > max_end_dt:
