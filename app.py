@@ -73,7 +73,6 @@ calendar_map = {
 app = Flask(__name__)
 CORS(app)
 
-# -- Your existing helper functions for translation, parsing, etc (unchanged) --
 
 # @app.route("/")
 # def home():
