@@ -193,12 +193,12 @@
                 addMessage(entry, "bot");
                 return;
               }
-              {% comment %} const room = entry.room || entry["房間"];
+              <!--const room = entry.room || entry["房間"];
               const start = entry.start || entry["開始時間"];
               const end = entry.end || entry["結束時間"];
               const available = entry.available ?? entry["是否可用"];
               const conflicts = entry.conflicts || entry["衝突"] || [];
-              const suggestion = entry.suggestion || entry["建議"]; {% endcomment %}
+              const suggestion = entry.suggestion || entry["建議"]; -->
 
               const room = entry.room;
               const start = entry.start;
@@ -207,11 +207,11 @@
               const conflicts = entry.conflicts || [];
               const suggestion = entry.suggestion;
 
-              {% comment %} let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
+              <!--let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
                 available === true || available === "✅ 可用"
                   ? "✅ Yes"
                   : "❌ No"
-              }`; {% endcomment %}
+              }`;  -->
 
               let availabilityText =
               currentLanguage === "cantonese"
@@ -224,7 +224,7 @@
 
               let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${availabilityText}`;
 
-              {% comment %} if (conflicts.length > 0) {
+              <!--{% comment %} if (conflicts.length > 0) {
                 msg +=
                   `\n📌 Conflicts:\n` +
                   conflicts
@@ -236,7 +236,7 @@
                       return `• ${title} @ ${r} (${cStart} - ${cEnd})`;
                     })
                     .join("\n");
-              } {% endcomment %}
+              }  -->
 
               if (conflicts.length > 0) {
                 msg +=
