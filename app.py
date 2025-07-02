@@ -46,12 +46,15 @@ DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
 DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-SERVICE_ACCOUNT_FILE = 'glass-house-at-lung-wah-0932d8d8f3ea.json'
+# SERVICE_ACCOUNT_FILE = 'glass-house-at-lung-wah-0932d8d8f3ea.json'
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
 
-credentials = service_account.Credentials.from_service_account_file(
-    SERVICE_ACCOUNT_FILE, scopes=SCOPES
-)
+# credentials = service_account.Credentials.from_service_account_file(
+#     SERVICE_ACCOUNT_FILE, scopes=SCOPES
+# )
+service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
+credentials = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
+
 service = build('calendar', 'v3', credentials=credentials)
 
 calendar_map = {
