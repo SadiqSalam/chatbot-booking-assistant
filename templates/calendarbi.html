@@ -193,20 +193,38 @@
                 addMessage(entry, "bot");
                 return;
               }
-              const room = entry.room || entry["房間"];
+              {% comment %} const room = entry.room || entry["房間"];
               const start = entry.start || entry["開始時間"];
               const end = entry.end || entry["結束時間"];
               const available = entry.available ?? entry["是否可用"];
               const conflicts = entry.conflicts || entry["衝突"] || [];
-              const suggestion = entry.suggestion || entry["建議"];
+              const suggestion = entry.suggestion || entry["建議"]; {% endcomment %}
 
-              let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
+              const room = entry.room;
+              const start = entry.start;
+              const end = entry.end;
+              const available = entry.available;
+              const conflicts = entry.conflicts || [];
+              const suggestion = entry.suggestion;
+
+              {% comment %} let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
                 available === true || available === "✅ 可用"
                   ? "✅ Yes"
                   : "❌ No"
-              }`;
+              }`; {% endcomment %}
 
-              if (conflicts.length > 0) {
+              let availabilityText =
+              currentLanguage === "cantonese"
+                ? available
+                  ? "✅ 可用"
+                  : "❌ 不可用"
+                : available
+                ? "✅ Yes"
+                : "❌ No";
+
+              let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${availabilityText}`;
+
+              {% comment %} if (conflicts.length > 0) {
                 msg +=
                   `\n📌 Conflicts:\n` +
                   conflicts
@@ -218,6 +236,24 @@
                       return `• ${title} @ ${r} (${cStart} - ${cEnd})`;
                     })
                     .join("\n");
+              } {% endcomment %}
+
+              if (conflicts.length > 0) {
+                msg +=
+                  currentLanguage === "cantonese" ? `\n📌 時間衝突：\n` : `\n📌 Conflicts:\n`;
+
+                msg += conflicts
+                  .map((c) => {
+                    const title = c.title;
+                    const cStart = c.start;
+                    const cEnd = c.end;
+                    const r = c.room;
+                    const note = c.note || "";
+                    return `• ${title} @ ${r} (${cStart} - ${cEnd})${
+                      note ? ` - ${note}` : ""
+                    }`;
+                  })
+                  .join("\n");
               }
 
               if (!available && suggestion?.suggested_room) {

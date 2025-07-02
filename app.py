@@ -883,13 +883,13 @@ def ask():
         timer.mark("after_availability_check")
 
         response_data = json.dumps(results, ensure_ascii=False, indent=2)
-        if query_is_chinese:
-            try:
-                translated_response = cached_translate_to_chinese(response_data)
-                timer.mark("after_response_translation")
-                return Response(translated_response, mimetype="application/json")
-            except Exception:
-                pass
+        # if query_is_chinese:
+        #     try:
+        #         translated_response = cached_translate_to_chinese(response_data)
+        #         timer.mark("after_response_translation")
+        #         return Response(translated_response, mimetype="application/json")
+        #     except Exception:
+        #         pass
 
         timer.mark("before_response_return")
         print("Performance breakdown:\n" + timer.summary())
