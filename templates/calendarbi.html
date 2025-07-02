@@ -155,16 +155,13 @@
           chatInput.value = "";
           const typingIndicator = showTypingIndicator();
           try {
-            const response = await fetch(
-              "https://chatbot-booking-assistant.onrender.com/ask",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ query: message }),
-              }
-            );
+            const response = await fetch("/ask", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ query: message }),
+            });
 
             const responseText = await response.text();
             typingIndicator.remove();
@@ -193,12 +190,12 @@
                 addMessage(entry, "bot");
                 return;
               }
-              <!--const room = entry.room || entry["房間"];
+              /*const room = entry.room || entry["房間"];
               const start = entry.start || entry["開始時間"];
               const end = entry.end || entry["結束時間"];
               const available = entry.available ?? entry["是否可用"];
               const conflicts = entry.conflicts || entry["衝突"] || [];
-              const suggestion = entry.suggestion || entry["建議"]; -->
+              const suggestion = entry.suggestion || entry["建議"]; */
 
               const room = entry.room;
               const start = entry.start;
@@ -207,24 +204,24 @@
               const conflicts = entry.conflicts || [];
               const suggestion = entry.suggestion;
 
-              <!--let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
+              /*let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${
                 available === true || available === "✅ 可用"
                   ? "✅ Yes"
                   : "❌ No"
-              }`;  -->
+              }`;  */
 
               let availabilityText =
-              currentLanguage === "cantonese"
-                ? available
-                  ? "✅ 可用"
-                  : "❌ 不可用"
-                : available
-                ? "✅ Yes"
-                : "❌ No";
+                currentLanguage === "cantonese"
+                  ? available
+                    ? "✅ 可用"
+                    : "❌ 不可用"
+                  : available
+                  ? "✅ Yes"
+                  : "❌ No";
 
               let msg = `📍 ${room}\n🕒 ${start} - ${end}\n🟢 Available: ${availabilityText}`;
 
-              <!--if (conflicts.length > 0) {
+              /**if (conflicts.length > 0) {
                 msg +=
                   `\n📌 Conflicts:\n` +
                   conflicts
@@ -236,11 +233,13 @@
                       return `• ${title} @ ${r} (${cStart} - ${cEnd})`;
                     })
                     .join("\n");
-              }  -->
+              }  */
 
               if (conflicts.length > 0) {
                 msg +=
-                  currentLanguage === "cantonese" ? `\n📌 時間衝突：\n` : `\n📌 Conflicts:\n`;
+                  currentLanguage === "cantonese"
+                    ? `\n📌 時間衝突：\n`
+                    : `\n📌 Conflicts:\n`;
 
                 msg += conflicts
                   .map((c) => {
