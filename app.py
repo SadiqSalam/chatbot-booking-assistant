@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, Response, session
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
@@ -17,7 +17,7 @@ from flask import render_template
 
 
     
-session = requests.Session()
+http_session = requests.Session()
 
 import time
 
@@ -176,7 +176,7 @@ def parse_natural_query_with_deepseek(query):
     }
 
     try:
-        response = session.post(DEEPSEEK_API_URL, headers=headers, json=data)
+        response = http_session.post(DEEPSEEK_API_URL, headers=headers, json=data)
         response.raise_for_status()
         content = response.json()['choices'][0]['message']['content'].strip()
 
@@ -209,7 +209,7 @@ def translate_to_english(text):
         ]
     }
 
-    response = session.post(DEEPSEEK_API_URL, headers=headers, json=data)
+    response = http_session.post(DEEPSEEK_API_URL, headers=headers, json=data)
     response.raise_for_status()
     return response.json()['choices'][0]['message']['content'].strip()
 
@@ -227,7 +227,7 @@ def translate_to_chinese(text):
         ]
     }
 
-    response = session.post(DEEPSEEK_API_URL, headers=headers, json=data)
+    response = http_session.post(DEEPSEEK_API_URL, headers=headers, json=data)
     response.raise_for_status()
     return response.json()['choices'][0]['message']['content'].strip()
 
@@ -657,7 +657,7 @@ data: []
     }
 
     try:
-        response = session.post(DEEPSEEK_API_URL, headers=headers, json=data)
+        response = http_session.post(DEEPSEEK_API_URL, headers=headers, json=data)
         response.raise_for_status()
         content = response.json()['choices'][0]['message']['content'].strip()
 
@@ -708,7 +708,7 @@ def classify_query_intent(query):
     }
 
     try:
-        response = session.post(DEEPSEEK_API_URL, headers=headers, json=data)
+        response = http_session.post(DEEPSEEK_API_URL, headers=headers, json=data)
         response.raise_for_status()
         label = response.json()["choices"][0]["message"]["content"].strip().lower()
         return label
