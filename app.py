@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify, Response
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from datetime import datetime, timedelta
@@ -114,8 +113,9 @@ def cached_translate_to_chinese(text):
     return translate_to_chinese(text)
 
 @lru_cache(maxsize=QUERY_CACHE_SIZE)
-def cached_parse_query(query):
-    return parse_natural_query_with_deepseek(query)
+def cached_parse_query(query, memory_context=""):
+    key = (query, memory_context)
+    return parse_natural_query_with_deepseek(query, memory_context=memory_context)
 
 @lru_cache(maxsize=QUERY_CACHE_SIZE)
 def classify_query_intent_cached(query):
@@ -583,7 +583,7 @@ def check_availability():
 
     return jsonify(response)
 
-def classify_and_parse_query(query):
+def classify_and_parse_query(query, memory_context):
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
         "Content-Type": "application/json"
@@ -608,7 +608,9 @@ If time of day is missing, assume the full day from 00:00 to 23:59 local time.
 If the intent is not 'booking_query', return an empty JSON array.
 
 The keyword 'today' in user input should be understood as the current date: {today}
-
+Use the following prior context to help interpret ambiguous queries:
+    {memory_context}
+    
 Valid room names:
 "DI Whole Area (all rooms)",
 "DI_Dream + Impact Room",
@@ -757,8 +759,14 @@ def ask():
         if not query:
             return jsonify({"error": "Missing 'query' field"}), 400
 
+        memory_context = ""
+        if session.get("last_room"):
+            memory_context += f"Previously mentioned room: {session['last_room']}\n"
+        if session.get("last_start") and session.get("last_end"):
+            memory_context += f"Previously mentioned time: from {session['last_start']} to {session['last_end']}\n"
+
         # Combined intent classification and parsing call (cached if needed)
-        intent, parsed_list = classify_and_parse_query(query)
+        intent, parsed_list = classify_and_parse_query(query, memory_context=memory_context)
         timer.mark("after_classify_and_parse")
 
         query_is_chinese = is_chinese(query)
@@ -815,7 +823,15 @@ def ask():
             cal_id = get_calendar_id_by_name(room)
             if cal_id:
                 calendar_ids.add(cal_id)
-
+                
+        for item in parsed_list:
+            if not item.get("room") and session.get("last_room"):
+                item["room"] = session["last_room"]
+            if not item.get("start") and session.get("last_start"):
+                item["start"] = session["last_start"]
+            if not item.get("end") and session.get("last_end"):
+                item["end"] = session["last_end"]
+                
         cached_events = {}
         if calendar_ids:
             cached_events = batch_fetch_events_for_period(calendar_ids, start_of_today.isoformat(), fetch_end_dt.isoformat())
@@ -830,6 +846,10 @@ def ask():
                     msg = cached_translate_to_chinese(msg)
                 return jsonify({"error": msg}), 400
 
+            session["last_room"] = item["room"]
+            session["last_start"] = item["start"]
+            session["last_end"] = item["end"]
+            
             available, conflicts, suggestion = is_room_available_cached(
                 item["room"],
                 item["start"],
