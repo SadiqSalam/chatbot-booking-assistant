@@ -16,9 +16,7 @@ import sys
 import io
 from flask import render_template
 
-@app.route("/")
-def home():
-    return render_template("calendarbi.html")
+
     
 session = requests.Session()
 
@@ -78,6 +76,10 @@ CORS(app)
 @app.route("/")
 def home():
     return "✅ Flask Calendar API is running. Use /check with parameters."
+
+@app.route("/")
+def home():
+    return render_template("calendarbi.html")
 
 def get_calendar_id_by_name(room_name):
     """
