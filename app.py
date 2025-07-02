@@ -75,9 +75,9 @@ CORS(app)
 
 # -- Your existing helper functions for translation, parsing, etc (unchanged) --
 
-@app.route("/")
-def home():
-    return "✅ Flask Calendar API is running. Use /check with parameters."
+# @app.route("/")
+# def home():
+#     return "✅ Flask Calendar API is running. Use /check with parameters."
 
 @app.route("/")
 def home():
