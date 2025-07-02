@@ -73,6 +73,7 @@ calendar_map = {
 app = Flask(__name__)
 CORS(app)
 
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key")  # Default fallback
 
 # @app.route("/")
 # def home():
