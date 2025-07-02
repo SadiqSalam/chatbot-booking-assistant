@@ -155,13 +155,16 @@
           chatInput.value = "";
           const typingIndicator = showTypingIndicator();
           try {
-            const response = await fetch("http://localhost:4000/ask", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ query: message }),
-            });
+            const response = await fetch(
+              "https://chatbot-booking-assistant.onrender.com/ask",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ query: message }),
+              }
+            );
 
             const responseText = await response.text();
             typingIndicator.remove();
